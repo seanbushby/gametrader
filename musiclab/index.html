@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-store">
+<title>Game Trader MusicLab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/bot-lab.css?v=0.35.87">
+<link rel="stylesheet" href="musiclab.css?v=0.35.87">
+<script>
+  window.BotLab = window.BotLab || {};
+  window.INSTRUMENTS = {
+    de40: { key: 'de40', label: 'DE40', csvFile: '../gametrader-de40.csv' },
+    ustec: { key: 'ustec', label: 'USTEC', csvFile: '../gametrader-ustec.csv' },
+    xauusd: { key: 'xauusd', label: 'XAUUSD', csvFile: '../gametrader-xauusd.csv' }
+  };
+</script>
+<script src="../js/bots/bot-market-data.js?v=0.35.87"></script>
+<script src="musiclab-fingerprint.js?v=0.35.87"></script>
+<script src="musiclab-detector.js?v=0.35.87"></script>
+<script src="musiclab-lyrics.js?v=0.35.87"></script>
+<script src="musiclab-ai.js?v=0.35.87"></script>
+<script src="musiclab.js?v=0.35.87"></script>
+</head>
+<body class="musiclab-body">
+  <div class="mlShell">
+    <header class="mlHeader">
+      <div>
+        <div class="mlKicker">Game Trader MusicLab</div>
+        <h1>Turn historical morning price action into a Suno soundtrack.</h1>
+      </div>
+        <div class="mlHeaderNote">Standalone browser analysis · Europe/London · v0.35.87</div>
+    </header>
+
+    <section class="mlCard mlControls">
+      <div class="mlGrid">
+        <label><span>Instrument</span><select id="mlInstrument"></select></label>
+        <label><span>Historical date</span><input id="mlDate" type="date"></label>
+        <label><span>Start time</span><input id="mlStartTime" type="time" value="08:00"></label>
+        <label><span>End time</span><input id="mlEndTime" type="time" value="11:00"></label>
+        <label><span>Timezone</span><input id="mlTimezone" type="text" value="Europe/London" readonly></label>
+        <label><span>Sensitivity</span><select id="mlSensitivity"><option>Conservative</option><option selected>Balanced</option><option>Sensitive</option></select></label>
+        <label><span>Hint strength</span><select id="mlHintStrength"><option>Atmospheric</option><option selected>Subtle</option><option>Guided</option><option>Training</option></select></label>
+        <label><span>Music style</span><select id="mlMusicStyle"><option selected>Dreamy Deep House</option><option>Dark Arcade Deep House</option><option>Ambient Focus</option><option>Cinematic Electronic</option><option>Minimal Tech House</option></select></label>
+        <label><span>Vocal style</span><select id="mlVocalStyle"><option selected>Female whisper</option><option>Male whisper</option><option>Mixed whispers</option><option>Minimal spoken vocal</option><option>Mostly instrumental</option></select></label>
+        <label><span>Song duration</span><select id="mlDuration"><option>3:30</option><option>4:00</option><option selected>4:30</option><option>5:00</option></select></label>
+        <label><span>Maximum song events</span><input id="mlMaxEvents" type="number" min="3" max="10" value="8"></label>
+      </div>
+      <div class="mlActions">
+        <button id="mlAnalyseBtn" class="btn primary" disabled>Analyse Morning</button>
+        <button id="mlResetBtn" class="btn">Reset</button>
+      </div>
+      <div id="mlLoadState" class="blDataStatus">Select an instrument and date.</div>
+    </section>
+
+    <section class="mlLayout">
+      <div class="mlMainCol">
+        <section class="mlCard">
+          <div class="mlSectionHead">Chart</div>
+          <div class="mlChartWrap"><canvas id="mlChart"></canvas><div id="mlChartTip" class="mlChartTip" style="display:none"></div></div>
+        </section>
+
+        <section class="mlCard">
+          <div class="mlSectionHead">Morning Summary</div>
+          <div id="mlSummary" class="mlTextBlock mlMonospace">Run an analysis to generate a factual summary.</div>
+        </section>
+
+        <section class="mlCard">
+          <div class="mlSectionHead">Detected Timeline</div>
+          <div id="mlTimeline" class="mlTimeline"></div>
+        </section>
+      </div>
+
+      <aside class="mlSideCol">
+        <section class="mlCard">
+          <div class="mlSectionHead">Data Status</div>
+          <div id="mlDataStatus" class="mlStats"></div>
+        </section>
+        <section class="mlCard">
+          <div class="mlSectionHead">Morning Classification</div>
+          <div id="mlClassification" class="mlStats"></div>
+        </section>
+        <section class="mlCard">
+          <div class="mlSectionHead">Event Evidence</div>
+          <div id="mlEvidence" class="mlTextBlock">Select a timeline event.</div>
+        </section>
+        <section class="mlCard">
+          <div class="mlSectionHead">Song Structure</div>
+          <div id="mlStructure" class="mlTextBlock"></div>
+        </section>
+        <section class="mlCard">
+          <div class="mlSectionHead">Session Infusion</div>
+          <div id="mlInfusion" class="mlStats"></div>
+          <div class="mlSectionHead" style="margin-top:12px">Motif Review</div>
+          <div id="mlMotifReview" class="mlMotifReview"></div>
+        </section>
+      </aside>
+    </section>
+
+    <section class="mlCard">
+      <div class="mlSectionHead">Generated Outputs</div>
+      <div class="mlOutputGrid">
+        <div>
+          <div class="mlOutputHead">Title Suggestions</div>
+          <div id="mlTitles" class="mlCopyBlock"></div>
+        </div>
+        <div>
+          <div class="mlOutputHead">Suno Style Prompt</div>
+          <pre id="mlStylePrompt" class="mlCopyBlock"></pre>
+        </div>
+        <div>
+          <div class="mlOutputHead">Suno Lyrics</div>
+          <pre id="mlLyrics" class="mlCopyBlock"></pre>
+        </div>
+        <div>
+          <div class="mlOutputHead">Complete Suno Package</div>
+          <pre id="mlPackage" class="mlCopyBlock"></pre>
+        </div>
+      </div>
+      <div class="mlActions mlWrapActions">
+        <button id="mlCopySummary" class="btn">Copy Morning Summary</button>
+        <button id="mlCopyTimeline" class="btn">Copy Timeline</button>
+        <button id="mlCopyStyle" class="btn">Copy Suno Style</button>
+        <button id="mlCopyLyrics" class="btn">Copy Suno Lyrics</button>
+        <button id="mlCopyPackage" class="btn">Copy Complete Package</button>
+        <button id="mlRegenerate" class="btn">Regenerate Wording</button>
+        <button id="mlDownload" class="btn">Download Analysis JSON</button>
+      </div>
+    </section>
+
+    <section class="mlCard">
+      <div class="mlSectionHead">OpenCode AI Song Package</div>
+      <div class="mlAiToolbar">
+        <label class="mlCheck"><input id="mlAiEnabled" type="checkbox" checked> Use OpenCode AI</label>
+        <label class="mlCheck"><input id="mlAiDebugToggle" type="checkbox"> Show AI debug details</label>
+        <button id="mlAiGenerate" class="btn primary" disabled>Generate AI Song Package</button>
+        <button id="mlAiRetry" class="btn" disabled>Retry</button>
+        <button id="mlAiReword" class="btn" disabled>Regenerate AI Wording</button>
+      </div>
+      <div id="mlAiStatus" class="blDataStatus">OpenCode unavailable.</div>
+      <div id="mlAiMeta" class="mlAiMeta"></div>
+      <div id="mlAiBadge" class="mlAiBadge"></div>
+      <div class="mlAiGrid">
+        <div>
+          <div class="mlOutputHead">Session Arc</div>
+          <div id="mlAiArc" class="mlCopyBlock"></div>
+        </div>
+        <div>
+          <div class="mlOutputHead">Title Suggestions</div>
+          <div id="mlAiTitles" class="mlCopyBlock"></div>
+        </div>
+        <div>
+          <div class="mlOutputHead">Suno Style Prompt</div>
+          <pre id="mlAiStyle" class="mlCopyBlock"></pre>
+        </div>
+        <div>
+          <div class="mlOutputHead">Suno Lyrics</div>
+          <pre id="mlAiLyrics" class="mlCopyBlock"></pre>
+        </div>
+        <div>
+          <div class="mlOutputHead">Event to Lyric Mapping</div>
+          <div id="mlAiMap" class="mlCopyBlock"></div>
+        </div>
+      </div>
+      <div class="mlActions mlWrapActions">
+        <button id="mlAiCopyStyle" class="btn">Copy AI Style</button>
+        <button id="mlAiCopyLyrics" class="btn">Copy AI Lyrics</button>
+        <button id="mlAiCopyPackage" class="btn">Copy AI Package</button>
+      </div>
+      <div id="mlAiDebugWrap" class="mlAiDebug" style="display:none">
+        <div class="mlOutputHead">AI Debug Details</div>
+        <pre id="mlAiDebug" class="mlCopyBlock"></pre>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

@@ -1,0 +1,326 @@
+{
+  "instrument": "DE40",
+  "computed_at": "2026-07-29T17:19:49.821915+00:00",
+  "window_start": "2025-01-02",
+  "window_end": "2026-07-29",
+  "asia_sweep": {
+    "asiaHi": {
+      "touched": {
+        "count": 292,
+        "denominator": 399,
+        "value": 73.18,
+        "unit": "pct"
+      },
+      "reclaimed": {
+        "count": 242,
+        "denominator": 292,
+        "value": 82.88,
+        "unit": "pct"
+      },
+      "accepted": {
+        "count": 50,
+        "denominator": 292,
+        "value": 17.12,
+        "unit": "pct"
+      }
+    },
+    "asiaLo": {
+      "touched": {
+        "count": 263,
+        "denominator": 399,
+        "value": 65.91,
+        "unit": "pct"
+      },
+      "reclaimed": {
+        "count": 208,
+        "denominator": 263,
+        "value": 79.09,
+        "unit": "pct"
+      },
+      "accepted": {
+        "count": 55,
+        "denominator": 263,
+        "value": 20.91,
+        "unit": "pct"
+      }
+    }
+  },
+  "ict_fvg": {
+    "asiaHi": {
+      "fvg": {
+        "count": 211,
+        "denominator": 242,
+        "value": 87.19,
+        "unit": "pct"
+      },
+      "retested": {
+        "count": 179,
+        "denominator": 211,
+        "value": 84.83,
+        "unit": "pct"
+      },
+      "confirmed": {
+        "count": 75,
+        "denominator": 179,
+        "value": 41.9,
+        "unit": "pct"
+      },
+      "invalidated": {
+        "count": 101,
+        "denominator": 179,
+        "value": 56.42,
+        "unit": "pct"
+      }
+    },
+    "asiaLo": {
+      "fvg": {
+        "count": 188,
+        "denominator": 208,
+        "value": 90.38,
+        "unit": "pct"
+      },
+      "retested": {
+        "count": 164,
+        "denominator": 188,
+        "value": 87.23,
+        "unit": "pct"
+      },
+      "confirmed": {
+        "count": 73,
+        "denominator": 164,
+        "value": 44.51,
+        "unit": "pct"
+      },
+      "invalidated": {
+        "count": 88,
+        "denominator": 164,
+        "value": 53.66,
+        "unit": "pct"
+      }
+    }
+  },
+  "realized_outcome": {
+    "asiaHi": {
+      "1r": {
+        "hit_target": {
+          "count": 75,
+          "denominator": 178,
+          "value": 42.13,
+          "unit": "pct"
+        },
+        "hit_stop": {
+          "count": 101,
+          "denominator": 178,
+          "value": 56.74,
+          "unit": "pct"
+        },
+        "no_hit": {
+          "count": 2,
+          "denominator": 178,
+          "value": 1.12,
+          "unit": "pct"
+        },
+        "avg_r_achieved": {
+          "count": 178,
+          "denominator": 178,
+          "value": 0.356,
+          "unit": "r_multiple"
+        }
+      },
+      "2r": {
+        "hit_target": {
+          "count": 47,
+          "denominator": 178,
+          "value": 26.4,
+          "unit": "pct"
+        },
+        "hit_stop": {
+          "count": 129,
+          "denominator": 178,
+          "value": 72.47,
+          "unit": "pct"
+        },
+        "no_hit": {
+          "count": 2,
+          "denominator": 178,
+          "value": 1.12,
+          "unit": "pct"
+        },
+        "avg_r_achieved": {
+          "count": 178,
+          "denominator": 178,
+          "value": 0.2,
+          "unit": "r_multiple"
+        }
+      },
+      "opposite_range": {
+        "hit_target": {
+          "count": 17,
+          "denominator": 178,
+          "value": 9.55,
+          "unit": "pct"
+        },
+        "hit_stop": {
+          "count": 155,
+          "denominator": 178,
+          "value": 87.08,
+          "unit": "pct"
+        },
+        "no_hit": {
+          "count": 6,
+          "denominator": 178,
+          "value": 3.37,
+          "unit": "pct"
+        },
+        "avg_r_achieved": {
+          "count": 178,
+          "denominator": 178,
+          "value": -0.379,
+          "unit": "r_multiple"
+        }
+      }
+    },
+    "asiaLo": {
+      "1r": {
+        "hit_target": {
+          "count": 73,
+          "denominator": 163,
+          "value": 44.79,
+          "unit": "pct"
+        },
+        "hit_stop": {
+          "count": 88,
+          "denominator": 163,
+          "value": 53.99,
+          "unit": "pct"
+        },
+        "no_hit": {
+          "count": 2,
+          "denominator": 163,
+          "value": 1.23,
+          "unit": "pct"
+        },
+        "avg_r_achieved": {
+          "count": 163,
+          "denominator": 163,
+          "value": 0.399,
+          "unit": "r_multiple"
+        }
+      },
+      "2r": {
+        "hit_target": {
+          "count": 41,
+          "denominator": 163,
+          "value": 25.15,
+          "unit": "pct"
+        },
+        "hit_stop": {
+          "count": 120,
+          "denominator": 163,
+          "value": 73.62,
+          "unit": "pct"
+        },
+        "no_hit": {
+          "count": 2,
+          "denominator": 163,
+          "value": 1.23,
+          "unit": "pct"
+        },
+        "avg_r_achieved": {
+          "count": 163,
+          "denominator": 163,
+          "value": 0.17,
+          "unit": "r_multiple"
+        }
+      },
+      "opposite_range": {
+        "hit_target": {
+          "count": 29,
+          "denominator": 163,
+          "value": 17.79,
+          "unit": "pct"
+        },
+        "hit_stop": {
+          "count": 127,
+          "denominator": 163,
+          "value": 77.91,
+          "unit": "pct"
+        },
+        "no_hit": {
+          "count": 7,
+          "denominator": 163,
+          "value": 4.29,
+          "unit": "pct"
+        },
+        "avg_r_achieved": {
+          "count": 163,
+          "denominator": 163,
+          "value": -0.308,
+          "unit": "r_multiple"
+        }
+      }
+    }
+  },
+  "smt_confluence": {
+    "STOXX50": {
+      "asiaHi": {
+        "smt_confirmed": {
+          "count": 205,
+          "denominator": 225,
+          "value": 91.11,
+          "unit": "pct"
+        },
+        "smt_diverged": {
+          "count": 20,
+          "denominator": 225,
+          "value": 8.89,
+          "unit": "pct"
+        }
+      },
+      "asiaLo": {
+        "smt_confirmed": {
+          "count": 161,
+          "denominator": 188,
+          "value": 85.64,
+          "unit": "pct"
+        },
+        "smt_diverged": {
+          "count": 27,
+          "denominator": 188,
+          "value": 14.36,
+          "unit": "pct"
+        }
+      }
+    },
+    "F40": {
+      "asiaHi": {
+        "smt_confirmed": {
+          "count": 182,
+          "denominator": 221,
+          "value": 82.35,
+          "unit": "pct"
+        },
+        "smt_diverged": {
+          "count": 39,
+          "denominator": 221,
+          "value": 17.65,
+          "unit": "pct"
+        }
+      },
+      "asiaLo": {
+        "smt_confirmed": {
+          "count": 159,
+          "denominator": 187,
+          "value": 85.03,
+          "unit": "pct"
+        },
+        "smt_diverged": {
+          "count": 28,
+          "denominator": 187,
+          "value": 14.97,
+          "unit": "pct"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,38 @@
+GameTrader CSV Exporter — opencode prompt
+
+Working directory: /data1/ai/gametrader/
+
+Read cTrader credentials from .env in that directory (CTRADER_CLIENT_ID,
+CTRADER_CLIENT_SECRET, CTRADER_ACCESS_TOKEN, CTRADER_REFRESH_TOKEN). Never
+hardcode them. Access tokens expire — use the refresh token to get a new one
+if a request fails on auth, and update .env in place if the flow returns a
+new one.
+
+Write a script (saved in /data1/ai/gametrader/) that exports the full
+previous trading week — Sunday 23:00 UK through Friday 21:00 UK, continuous,
+no stripping — as 1-minute OHLCV bars for DE40, XAUUSD, and USTEC:
+
+gametrader-de40.csv
+gametrader-xauusd.csv
+gametrader-ustec.csv
+
+Format:
+
+time,open,high,low,close,Volume
+<unix_seconds>,<open>,<high>,<low>,<close>,<volume>
+
+Requirements:
+
+
+Prefer candles.db (or equivalent) if it already has fresh, current data
+for these symbols — simplest, no API risk. Otherwise pull via cTrader
+Open API, reusing whatever connection/auth code and symbol/divisor
+mappings already exist in this codebase rather than reinventing them.
+Idempotent: clean overwrite each run, sorted ascending, no duplicate rows.
+After each file, print row count, first/last timestamp (UK time), and
+flag any weekday gap larger than a few minutes.
+No interactive prompts — this becomes a cron job once confirmed working.
+
+
+Done when all three CSVs exist in /data1/ai/gametrader/ with a clean full
+week of data, runnable manually first so I can check it before adding cron.

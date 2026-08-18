@@ -1,0 +1,20 @@
+[Unit]
+Description=Game Trader read-only candle API
+After=network.target
+
+[Service]
+Type=simple
+User=smbuser
+Group=smbuser
+WorkingDirectory=/var/www/html/gametrader
+ExecStart=/usr/bin/python3 /var/www/html/gametrader/api/candle_server.py
+Restart=on-failure
+RestartSec=2
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadOnlyPaths=/trading/data/candles.db /var/www/html/gametrader
+
+[Install]
+WantedBy=multi-user.target

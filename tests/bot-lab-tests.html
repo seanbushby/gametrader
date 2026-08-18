@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bot Lab Browser Tests</title>
+<style>
+body{font-family:monospace;background:#111;color:#eee;padding:20px;font-size:13px}.pass{color:#0f8}.fail{color:#f44}#results{line-height:1.8}.summary{font-size:16px;font-weight:700;margin-top:20px;padding:10px;border:1px solid #444;border-radius:8px}
+</style>
+</head>
+<body>
+<h2>Bot Lab Browser Tests</h2>
+<div id="results"></div><div class="summary" id="summary">Running...</div>
+<script src="../js/bots/bot-contract.js"></script>
+<script src="../js/bots/bot-registry.js"></script>
+<script src="../js/bots/bot-test-engine.js"></script>
+<script src="../js/bots/bot-test-storage.js"></script>
+<script src="../js/bots/intervention-tracker.js"></script>
+<script src="../js/bots/autonomous-runner.js"></script>
+<script src="../js/bots/managed-runner.js"></script>
+<script src="../js/bots/bot-session-controller.js"></script>
+<script src="../js/bots/bot-comparison-metrics.js"></script>
+<script src="../js/bots/bot-report.js"></script>
+<script src="../js/bots/reference-bot.js"></script>
+<script src="../js/bots/bokke-one-pack.js"></script>
+<script>
+'use strict';
+(async function(){
+  const output=document.getElementById('results');
+  const summary=document.getElementById('summary');
+  let passed=0,failed=0;
+  function test(value,message){
+    const ok=!!value; if(ok) passed++; else failed++;
+    output.insertAdjacentHTML('beforeend','<div class="'+(ok?'pass':'fail')+'">'+(ok?'PASS: ':'FAIL: ')+message+'</div>');
+  }
+  function bot(){
+    let closed=0;
+    return {onStart(){},onBar(){return {type:'OPEN_POSITION',direction:'long',size:1,stopLossPoints:5,takeProfitPoints:10};},onTick(){},onPositionClosed(){closed++;},onSessionEnd(){},closedCount(){return closed;}};
+  }
+  try{
+    const engine=BotLab.ExecutionEngine.create({startBalance:10000,spread:2,minSize:1,maxSize:5});
+    const instance=bot();
+    const runner=BotLab.AutonomousRunner.create(instance,engine,{});
+    const timestamp=Date.parse('2026-01-15T08:00:00Z');
+    const context={price:100,timestamp,barIndex:0,warmupBars:[]};
+    await runner.start(context);
+    await runner.processBar([timestamp/1000,100,101,99,100,1],context);
+    const position=runner.getPositions()[0];
+    test(position&&position.entryPrice===101,'returned command opens at the spread-adjusted replay price');
+    test(position&&position.stopLoss===96&&position.takeProfit===111,'point stop and target use the actual fill');
+    await runner.applyExecutionClosures(engine.checkStops(95,100,95,timestamp+60000));
+    test(runner.getPositions().filter(item=>!item.closed).length===0,'engine stop synchronizes runner state');
+    test(instance.closedCount()===1,'engine stop invokes the bot close callback');
+
+    const tracker=BotLab.InterventionTracker.create();
+    const managedEngine=BotLab.ExecutionEngine.create({startBalance:10000,spread:0,minSize:1,maxSize:5});
+    const managed=BotLab.ManagedRunner.create(bot(),managedEngine,{},tracker);
+    await managed.start(context); await managed.processBar([timestamp/1000,100,101,99,100,1],context);
+    const managedPosition=managed.getPositions()[0];
+    test(await managed.humanAddStop(managedPosition.id,99,100,timestamp+60000,'test','2026-01-15'),'valid long human stop is accepted');
+    test(!(await managed.humanAddStop(managedPosition.id,98,100,timestamp+120000,'test','2026-01-15')),'human stop cannot be widened');
+    test(await managed.humanClosePosition(managedPosition.id,105,timestamp+180000,'test','2026-01-15'),'manual close succeeds at replay market time');
+    test(managed.getClosedPositions()[0].exitPrice===105,'manual close uses replay market price');
+
+    const noBot={onStart(){},onBar(){},onTick(){},onSessionEnd(){}};
+    function branch(){const e=BotLab.ExecutionEngine.create({startBalance:10000});return BotLab.AutonomousRunner.create(noBot,e,{});}
+    const controller=BotLab.SessionController.create({sessionStartMin:480,sessionEndMin:660,cruiseSpeed:50},branch(),branch(),tracker);
+    test(controller.isInSession(timestamp),'UK session includes its exact start');
+    test(!controller.isInSession(Date.parse('2026-01-15T11:00:00Z')),'UK session excludes its exact end');
+
+    const definition=BotLab.BokkeOnePack.create();
+    test(definition.instruments[0]==='de40','Bokke is restricted to DE40');
+    test(definition.settingsSchema.entry_cutoff.default==='11:00','Bokke entry cutoff matches deployed Python config');
+
+    const day1={autonomousMetrics:BotLab.ComparisonMetrics.computeDailyMetrics({openingBalance:10000,balance:10100,trades:[{pl:100}],equityCurve:[10000,10100]}),managedMetrics:BotLab.ComparisonMetrics.computeDailyMetrics({openingBalance:10000,balance:10050,trades:[{pl:50}],equityCurve:[10000,10050]})};
+    const day2={autonomousMetrics:BotLab.ComparisonMetrics.computeDailyMetrics({openingBalance:10100,balance:10120,trades:[{pl:20}],equityCurve:[10100,10120]}),managedMetrics:BotLab.ComparisonMetrics.computeDailyMetrics({openingBalance:10050,balance:10130,trades:[{pl:80}],equityCurve:[10050,10130]})};
+    const comparison=BotLab.ComparisonMetrics.computeTestComparison([day1,day2],10000);
+    test(comparison.autonomous.totalTrades===2,'multi-day report counts each trade once');
+    test(comparison.managementImpact===10,'multi-day management impact is correct');
+  }catch(error){failed++;output.insertAdjacentHTML('beforeend','<div class="fail">ERROR: '+String(error&&error.stack||error)+'</div>');}
+  summary.innerHTML=passed+' passed, '+failed+' failed'; summary.style.borderColor=failed?'#f44':'#0f8';
+})();
+</script>
+</body>
+</html>

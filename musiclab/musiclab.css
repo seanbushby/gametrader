@@ -1,0 +1,56 @@
+.musiclab-body{margin:0;background:#0b0e13;color:#e8e4da;font-family:'JetBrains Mono',ui-monospace,monospace}
+.mlShell{max-width:1400px;margin:0 auto;padding:18px 16px 28px}
+.mlHeader{display:flex;justify-content:space-between;gap:14px;align-items:flex-end;flex-wrap:wrap;margin-bottom:16px}
+.mlKicker{font-family:'Press Start 2P',monospace;color:#d4a574;font-size:12px;line-height:1.5;letter-spacing:1px}
+.mlHeader h1{margin:8px 0 0;font-size:24px;line-height:1.35}
+.mlHeaderNote{color:#8b93a7;font-size:12px}
+.mlCard{background:#12161f;border:1px solid #242b3a;border-radius:14px;padding:14px 14px 16px;box-shadow:0 10px 28px rgba(0,0,0,.18);margin-bottom:14px}
+.mlSectionHead{font-family:'Press Start 2P',monospace;color:#d4a574;font-size:11px;letter-spacing:.8px;margin-bottom:12px;line-height:1.6}
+.mlControls{position:sticky;top:0;z-index:4;background:linear-gradient(180deg,rgba(18,22,31,.98),rgba(18,22,31,.95))}
+.mlGrid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+.mlGrid label{display:grid;gap:6px;font-size:11px;color:#8b93a7}
+.mlGrid span{font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:#4a5266}
+.mlGrid input,.mlGrid select{background:#181d29;border:1px solid #242b3a;color:#e8e4da;font-family:inherit;padding:10px 10px;border-radius:10px;font-size:13px;min-width:0}
+.mlGrid input[readonly]{opacity:.9}
+.mlActions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.mlWrapActions{margin-top:12px}
+.mlLayout{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(320px,.85fr);gap:14px;align-items:start}
+.mlMainCol,.mlSideCol{min-width:0}
+.mlChartWrap{position:relative;height:520px;background:#0b0e13;border:1px solid #242b3a;border-radius:12px;overflow:hidden}
+#mlChart{width:100%;height:100%;display:block;touch-action:none;cursor:crosshair}
+.mlChartTip{position:absolute;pointer-events:none;z-index:3;max-width:280px;background:rgba(18,22,31,.96);border:1px solid #d4a574;border-radius:10px;padding:10px 12px;color:#e8e4da;font-size:11px;line-height:1.55;box-shadow:0 10px 24px rgba(0,0,0,.35)}
+.mlTextBlock{font-size:12px;line-height:1.75;color:#cdd2dd;white-space:pre-wrap}
+.mlMonospace{font-variant-numeric:tabular-nums}
+.mlTimeline{display:grid;gap:8px}
+.mlTimelineItem{background:#181d29;border:1px solid #242b3a;border-radius:10px;padding:10px 12px;cursor:pointer;transition:border-color .12s,transform .12s}
+.mlTimelineItem:hover,.mlTimelineItem.sel{border-color:#d4a574;transform:translateY(-1px)}
+.mlTimelineItem .t{color:#d4a574;font-size:11px;margin-bottom:4px}
+.mlTimelineItem .d{font-size:12px;line-height:1.6}
+.mlStats{display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:12px;line-height:1.5}
+.mlStat{background:#181d29;border:1px solid #242b3a;border-radius:10px;padding:10px 12px}
+.mlStat .k{font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:#4a5266;margin-bottom:4px}
+.mlStat .v{font-size:13px;color:#e8e4da;white-space:pre-wrap}
+.mlMotifReview{display:grid;gap:10px}
+.mlMotifRow{display:grid;gap:8px}
+.mlMotifRow .v b{color:#f3f7fb}
+.mlMotifActions{display:flex;gap:8px;flex-wrap:wrap}
+.mlMotifActions .btn{padding:7px 10px;font-size:11px}
+.mlOutputGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.mlAiToolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.mlCheck{display:inline-flex;align-items:center;gap:8px;font-size:12px;color:#cdd2dd;background:#181d29;border:1px solid #242b3a;border-radius:10px;padding:9px 12px}
+.mlCheck input{accent-color:#d4a574}
+.mlAiMeta{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;font-size:11px;color:#8b93a7}
+.mlAiBadge{display:inline-flex;align-items:center;gap:8px;margin-bottom:12px;font-size:12px;font-weight:700;color:#d4a574}
+.mlAiBadge .tag{padding:3px 8px;border-radius:999px;border:1px solid rgba(212,165,116,.35);background:rgba(212,165,116,.08)}
+.mlAiGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.mlAiDebug{margin-top:12px}
+.mlOutputHead{font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:#8b93a7;margin-bottom:6px}
+.mlCopyBlock{background:#0b0e13;border:1px solid #242b3a;border-radius:10px;min-height:88px;padding:10px 12px;white-space:pre-wrap;font-size:12px;line-height:1.7;overflow:auto}
+pre.mlCopyBlock{margin:0}
+.mlEventRanges{display:grid;gap:6px}
+.mlRangeBadge{display:inline-block;padding:2px 7px;border-radius:999px;background:rgba(212,165,116,.1);border:1px solid rgba(212,165,116,.35);color:#d4a574;font-size:10px;margin-right:6px}
+.mlWarn{color:#ffb86b}
+.mlGood{color:#00e58c}
+.mlBad{color:#ff4d5e}
+@media (max-width:1100px){.mlGrid{grid-template-columns:repeat(2,minmax(0,1fr))}.mlLayout{grid-template-columns:1fr}.mlChartWrap{height:460px}.mlStats{grid-template-columns:1fr}.mlOutputGrid{grid-template-columns:1fr}}
+@media (max-width:640px){.mlShell{padding:12px}.mlHeader h1{font-size:19px}.mlGrid{grid-template-columns:1fr}.mlStats,.mlOutputGrid{grid-template-columns:1fr}.mlChartWrap{height:380px}}

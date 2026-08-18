@@ -1,0 +1,11 @@
+# secrets — never commit live cTrader credentials
+.env
+
+# deps / build junk
+.opencode/node_modules/
+node_modules/
+__pycache__/
+*.pyc
+
+# runtime/scratch
+*.log
