@@ -1,3 +1,6 @@
+# v0.35.75 - 2026-08-18
+- Fixed Daily Arcade Run crashing on click: the deterministic pick used a hex-string hash directly in modulo arithmetic (NaN -> undefined index). It now parses the hash to a number first.
+
 # v0.35.74 - 2026-08-18
 - Fixed boot flow: the app now auto-selects the last-used (or default DE40) instrument on login so the day list populates immediately and PLAY / Daily Run work on the first click. Previously a fresh boot had no instrument selected, so PLAY / Daily Run showed "No levels loaded yet" and the Cockpit layout appeared to do nothing (its changes only show on the game screen).
 
