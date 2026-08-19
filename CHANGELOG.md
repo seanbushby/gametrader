@@ -1,3 +1,6 @@
+# v0.35.74 - 2026-08-18
+- Fixed boot flow: the app now auto-selects the last-used (or default DE40) instrument on login so the day list populates immediately and PLAY / Daily Run work on the first click. Previously a fresh boot had no instrument selected, so PLAY / Daily Run showed "No levels loaded yet" and the Cockpit layout appeared to do nothing (its changes only show on the game screen).
+
 # v0.35.73 - 2026-08-18
 - GT-ARCADE-UI-001 interface/flow pass:
   - Added selectable interface layouts: Classic (unchanged full workspace) and Cockpit (streamlined arcade HUD around the same chart/engine). Preference persisted via Settings gt_set_interfaceLayout, switchable in the settings drawer.
