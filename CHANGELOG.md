@@ -1,3 +1,6 @@
+## [0.35.76] - 2026-08-18
+### Fixed
+- Stop-widening detection was dead code: `moveStopTo`/`moveStop` overwrote `pos.stop` before calling `flagStopWidening`, so the old-risk comparison always compared the stop against itself and the violation never fired. Now the previous stop is passed explicitly; widening a stop (risk moved further from entry) correctly breaks the combo, applies the process penalty, and shows STOP WIDENED feedback.
 # v0.35.75 - 2026-08-18
 - Fixed Daily Arcade Run crashing on click: the deterministic pick used a hex-string hash directly in modulo arithmetic (NaN -> undefined index). It now parses the hash to a number first.
 

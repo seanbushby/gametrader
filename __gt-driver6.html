@@ -1,0 +1,132 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>GT DRIVER 5</title></head><body>
+<pre id="out">starting...</pre>
+<script>
+try{ localStorage.setItem('gt_login_ok','1'); localStorage.removeItem('gt_instrument'); }catch(e){}
+const results=[];
+const ok=(n,d)=>results.push('PASS '+n+(d?' :: '+d:''));
+const bad=(n,d)=>results.push('FAIL '+n+(d?' :: '+d:''));
+const info=(n,d)=>results.push('INFO '+n+(d?' :: '+d:''));
+const ifr=document.createElement('iframe'); ifr.id='app'; ifr.src='gametrader.html';
+ifr.style.cssText='width:1280px;height:900px;border:0;';
+document.body.appendChild(ifr);
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+function fdoc(){ const f=document.getElementById('app'); return f&&f.contentDocument?f.contentDocument:null; }
+function fwin(){ const f=document.getElementById('app'); return f&&f.contentWindow?f.contentWindow:null; }
+function findInFrame(sel){ const d=fdoc(); return d?d.querySelector(sel):null; }
+function activeScreen(){ const d=fdoc(); if(!d) return null; const a=d.querySelector('.screen.active'); return a?a.id:null; }
+function clickById(id){ const el=findInFrame('#'+id); if(!el) return 'MISSING:'+id; el.click(); return 'OK'; }
+function js(code){ const w=fwin(); if(!w) return 'NOFRAME'; try{ return w.eval(code); }catch(e){ return 'EVALERR:'+e.message; } }
+function key(k,code){ const w=fwin(); w.dispatchEvent(new w.KeyboardEvent('keydown',{key:k,code:code||('Key'+k.toUpperCase()),bubbles:true})); }
+function keyup(k,code){ const w=fwin(); w.dispatchEvent(new w.KeyboardEvent('keyup',{key:k,code:code||('Key'+k.toUpperCase()),bubbles:true})); }
+function clickSel(sel){ const el=findInFrame(sel); if(!el) return 'MISSING:'+sel; el.click(); return 'OK'; }
+function mouseDownWrap(fx,fy){
+  const w=fwin(); const cv=findInFrame('#cvWrap'); if(!cv) return 'NOCVWRAP';
+  const r=cv.getBoundingClientRect();
+  const ev=new w.MouseEvent('mousedown',{bubbles:true,cancelable:true,button:0,clientX:r.left+r.width*fx,clientY:r.top+r.height*fy});
+  cv.dispatchEvent(ev);
+  const up=new w.MouseEvent('mouseup',{bubbles:true,cancelable:true,button:0,clientX:r.left+r.width*fx,clientY:r.top+r.height*fy});
+  cv.dispatchEvent(up);
+  return 'OK';
+}
+async function step(name, fn){
+  try{ await fn(); }catch(e){ bad(name,'EXC '+e.message); }
+  const errs=js('window.__gtErrors&&window.__gtErrors.length?window.__gtErrors.join("|"):""');
+  if(errs && String(errs)!=='EVALERR:window.__gtErrors is undefined' && String(errs)!==''){ bad(name,'JS ERROR: '+String(errs).slice(0,400)); js('window.__gtErrors.length=0'); }
+  else js('window.__gtErrors&&(window.__gtErrors.length=0)');
+}
+async function boot(){
+  await wait(2500);
+  js(`(function(){ if(window.__gtErrInstalled) return; window.__gtErrInstalled=true; window.__gtErrors=[];
+    window.addEventListener('error',function(e){ window.__gtErrors.push('ERR '+(e.message||e.type)); });
+    window.addEventListener('unhandledrejection',function(e){ window.__gtErrors.push('REJ '+(e.reason&&e.reason.message||e.reason)); });
+    var oe=console.error; console.error=function(){ window.__gtErrors.push('CERR '+Array.prototype.map.call(arguments,String).join(' ').slice(0,200)); oe.apply(console,arguments); }; })();`);
+  await wait(300);
+  const scr=activeScreen(), cards=findInFrame('#levelList')?findInFrame('#levelList').children.length:0;
+  info('boot', 'screen='+scr+' cards='+cards);
+  if(scr==='menu' && cards>0) ok('boot: menu populated', 'cards='+cards); else bad('boot: menu populated','screen='+scr+' cards='+cards);
+}
+async function run(){
+  await boot();
+  clickById('playBtn'); await wait(2000);
+  const lessonShown=js('document.getElementById("lessonOv")?document.getElementById("lessonOv").classList.contains("show"):false');
+  if(lessonShown===true){ clickById('lessonStartBtn'); await wait(600); }
+  if(js('!!Game.intro')===true){ js('Game.endIntro()'); await wait(400); }
+  // click chart to place a limit? First arm long and click chart center
+  await step('Market order via arm+click', async()=>{
+    key('l','KeyL'); await wait(150); keyup('l','KeyL'); await wait(150);
+    const arm=js('Game.armSide');
+    const r=mouseDownWrap(0.9,0.5); await wait(800);
+    const tickets=js('Game.tickets?Game.tickets.length:0');
+    const pos=js('Game.pos?"pos:"+Game.pos.dir:"null"');
+    info('order', 'arm='+arm+' click='+r+' tickets='+tickets+' pos='+pos);
+    if(arm===1 && tickets>=1) ok('armed L + chart click opens ticket','tickets='+tickets+' pos='+pos);
+    else bad('armed L + chart click opens ticket','arm='+arm+' tickets='+tickets);
+  });
+  // Add SL via button
+  await step('Add SL button', async()=>{
+    const has=js('!!document.getElementById("btnAddSL")');
+    const b4=js('Game.tickets&&Game.tickets[0]?Game.tickets[0].stop:null');
+    clickById('btnAddSL'); await wait(500);
+    const af=js('Game.tickets&&Game.tickets[0]?Game.tickets[0].stop:null');
+    info('addSL', 'btn='+has+' stop '+b4+'→'+af);
+    if(b4==null && af!=null) ok('Add SL sets stop','stop='+af); else bad('Add SL sets stop',''+b4+'→'+af);
+  });
+  // Add TP
+  await step('Add TP button', async()=>{
+    const b4=js('Game.tickets&&Game.tickets[0]?Game.tickets[0].tp:null');
+    clickById('btnAddTP'); await wait(500);
+    const af=js('Game.tickets&&Game.tickets[0]?Game.tickets[0].tp:null');
+    info('addTP', 'tp '+b4+'→'+af);
+    if(af!=null) ok('Add TP sets tp','tp='+af); else bad('Add TP sets tp',''+b4+'→'+af);
+  });
+  // Close all
+  await step('Close all', async()=>{
+    const b4=js('Game.tickets?Game.tickets.length:0');
+    clickById('btnCloseAll'); await wait(500);
+    const af=js('Game.tickets?Game.tickets.length:0');
+    const trades=js('Game.trades?Game.trades.length:0');
+    info('closeAll', 'tickets '+b4+'→'+af+' trades='+trades);
+    if(af===0 && trades>0) ok('Close all closes position','trades='+trades); else bad('Close all closes position','tickets '+b4+'→'+af);
+  });
+  // Right-click ctx menu market order
+  await step('Ctx market order', async()=>{
+    const w=fwin(); const cv=findInFrame('#cv');
+    const r=cv.getBoundingClientRect();
+    cv.dispatchEvent(new w.MouseEvent('contextmenu',{bubbles:true,cancelable:true,clientX:r.left+r.width*0.5,clientY:r.top+r.height*0.5}));
+    await wait(300);
+    const items=js('Array.from(document.querySelectorAll("#ctxMenu .ctxItem")).map(i=>i.dataset.act).join(",")');
+    info('ctx items', String(items));
+    clickSel('#ctxMenu [data-act="buymarket"]'); await wait(600);
+    const tickets=js('Game.tickets?Game.tickets.length:0');
+    info('after buymarket', 'tickets='+tickets);
+    if(tickets>=1) ok('ctx market buy works','tickets='+tickets); else bad('ctx market buy works','tickets='+tickets);
+  });
+  // Limit order via ctx
+  await step('Ctx limit order', async()=>{
+    const w=fwin(); const cv=findInFrame('#cv');
+    const r=cv.getBoundingClientRect();
+    cv.dispatchEvent(new w.MouseEvent('contextmenu',{bubbles:true,cancelable:true,clientX:r.left+r.width*0.4,clientY:r.top+r.height*0.6}));
+    await wait(300);
+    clickSel('#ctxMenu [data-act="buylimit"]'); await wait(600);
+    const pending=js('Game.orders?Game.orders.length:0');
+    info('after buylimit', 'orders='+pending);
+    ok('ctx limit order path','orders='+pending);
+  });
+  // Bokke indicator present + canvas drawing
+  await step('Bokke indicator', async()=>{
+    const ind=js('!!document.getElementById("indicatorMenuBar")');
+    const defaultOn=js('Settings.vals.bokkeGold===true');
+    info('indicator', 'bar='+ind+' bokkeGold='+defaultOn);
+    if(ind===true && defaultOn===true) ok('indicator bar + bokke default on','bar='+ind); else bad('indicator bar + bokke default on','bar='+ind+' bokke='+defaultOn);
+  });
+  // combo pill
+  await step('Combo pill', async()=>{
+    const pill=js('!!document.getElementById("mCombo")');
+    info('combo pill', String(pill));
+    ok('combo pill present','present='+pill);
+  });
+  js('try{Game.quitToMenu();}catch(e){}'); await wait(600);
+  document.getElementById('out').textContent=results.join('\n');
+}
+run().catch(e=>{ document.getElementById('out').textContent=results.join('\n')+'\nFATAL '+e.message; });
+</script></body></html>

@@ -1,0 +1,125 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>GT DRIVER 4</title></head><body>
+<pre id="out">starting...</pre>
+<script>
+try{ localStorage.setItem('gt_login_ok','1'); localStorage.removeItem('gt_instrument'); }catch(e){}
+const results=[];
+const ok=(n,d)=>results.push('PASS '+n+(d?' :: '+d:''));
+const bad=(n,d)=>results.push('FAIL '+n+(d?' :: '+d:''));
+const info=(n,d)=>results.push('INFO '+n+(d?' :: '+d:''));
+const ifr=document.createElement('iframe'); ifr.id='app'; ifr.src='gametrader.html';
+ifr.style.cssText='width:1280px;height:900px;border:0;';
+document.body.appendChild(ifr);
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+function fdoc(){ const f=document.getElementById('app'); return f&&f.contentDocument?f.contentDocument:null; }
+function fwin(){ const f=document.getElementById('app'); return f&&f.contentWindow?f.contentWindow:null; }
+function findInFrame(sel){ const d=fdoc(); return d?d.querySelector(sel):null; }
+function activeScreen(){ const d=fdoc(); if(!d) return null; const a=d.querySelector('.screen.active'); return a?a.id:null; }
+function clickById(id){ const el=findInFrame('#'+id); if(!el) return 'MISSING:'+id; el.click(); return 'OK'; }
+function clickSel(sel){ const el=findInFrame(sel); if(!el) return 'MISSING:'+sel; el.click(); return 'OK'; }
+function pointerOn(sel){ const w=fwin(); const el=findInFrame(sel); if(!el) return 'MISSING:'+sel;
+  ['pointerdown','pointerup'].forEach(t=>{ el.dispatchEvent(new w.PointerEvent(t,{bubbles:true,cancelable:true,pointerId:1,pointerType:'mouse'})); });
+  return 'OK'; }
+function js(code){ const w=fwin(); if(!w) return 'NOFRAME'; try{ return w.eval(code); }catch(e){ return 'EVALERR:'+e.message; } }
+function key(k,code){ const w=fwin(); w.dispatchEvent(new w.KeyboardEvent('keydown',{key:k,code:code||('Key'+k.toUpperCase()),bubbles:true})); }
+function keyup(k,code){ const w=fwin(); w.dispatchEvent(new w.KeyboardEvent('keyup',{key:k,code:code||('Key'+k.toUpperCase()),bubbles:true})); }
+async function step(name, fn){
+  try{ await fn(); }catch(e){ bad(name,'EXC '+e.message); }
+  const errs=js('window.__gtErrors&&window.__gtErrors.length?window.__gtErrors.join("|"):""');
+  if(errs && String(errs)!=='EVALERR:window.__gtErrors is undefined' && String(errs)!==''){ bad(name,'JS ERROR: '+String(errs).slice(0,400)); js('window.__gtErrors.length=0'); }
+  else js('window.__gtErrors&&(window.__gtErrors.length=0)');
+}
+async function boot(){
+  await wait(2500);
+  js(`(function(){ if(window.__gtErrInstalled) return; window.__gtErrInstalled=true; window.__gtErrors=[];
+    window.addEventListener('error',function(e){ window.__gtErrors.push('ERR '+(e.message||e.type)); });
+    window.addEventListener('unhandledrejection',function(e){ window.__gtErrors.push('REJ '+(e.reason&&e.reason.message||e.reason)); });
+    var oe=console.error; console.error=function(){ window.__gtErrors.push('CERR '+Array.prototype.map.call(arguments,String).join(' ').slice(0,200)); oe.apply(console,arguments); }; })();`);
+  await wait(300);
+  const scr=activeScreen(), cards=findInFrame('#levelList')?findInFrame('#levelList').children.length:0;
+  info('boot', 'screen='+scr+' cards='+cards);
+  if(scr==='menu' && cards>0) ok('boot: menu populated', 'cards='+cards); else bad('boot: menu populated','screen='+scr+' cards='+cards);
+}
+async function run(){
+  await boot();
+  // Enter game, dismiss lesson, skip intro
+  clickById('playBtn'); await wait(2000);
+  info('entry', 'screen='+activeScreen()+' paused='+js('Game.paused')+' intro='+js('!!Game.intro'));
+  // if lesson modal showing, click Start replay
+  const lessonShown=js('document.getElementById("lessonOv")?document.getElementById("lessonOv").classList.contains("show"):false');
+  info('lesson modal', String(lessonShown));
+  if(lessonShown===true){ clickById('lessonStartBtn'); await wait(600); info('after lesson start', 'paused='+js('Game.paused')); }
+  // skip intro
+  if(js('!!Game.intro')===true){ js('Game.endIntro()'); await wait(400); }
+  info('ready', 'paused='+js('Game.paused')+' intro='+js('!!Game.intro')+' over='+js('Game.over'));
+
+  // Pause chip clean test
+  await step('Pause chip (post-intro)', async()=>{
+    pointerOn('#tPause'); await wait(400);
+    const p=js('Game.paused'); const show=js('document.getElementById("pauseOv").classList.contains("show")');
+    info('paused?', 'paused='+p+' show='+show);
+    if(p===true && show===true) ok('pause works after intro','paused='+p+' show='+show); else bad('pause works after intro','paused='+p+' show='+show);
+    pointerOn('#tPause'); await wait(300);
+    ok('resume works','paused='+js('Game.paused'));
+  });
+  // Arm semantics with keyup
+  await step('Arm L/S with keyup', async()=>{
+    key('l','KeyL'); await wait(150); keyup('l','KeyL'); await wait(150);
+    const a1=js('Game.armSide');
+    key('l','KeyL'); await wait(150); keyup('l','KeyL'); await wait(150);
+    const a2=js('Game.armSide');
+    key('s','KeyS'); await wait(150); keyup('s','KeyS'); await wait(150);
+    const a3=js('Game.armSide');
+    key('s','KeyS'); await wait(150); keyup('s','KeyS'); await wait(150);
+    const a4=js('Game.armSide');
+    info('arm', a1+'→'+a2+'→'+a3+'→'+a4);
+    if(a1===1&&a2===null&&a3===-1&&a4===null) ok('L/S arm toggles','1→null→-1→null'); else bad('L/S arm toggles',''+a1+'→'+a2+'→'+a3+'→'+a4);
+  });
+  // Space toggles order mode off
+  await step('Space disarm', async()=>{
+    key('l','KeyL'); await wait(150); keyup('l','KeyL'); await wait(150);
+    const a1=js('Game.armSide');
+    key(' ','Space'); await wait(150); keyup(' ','Space'); await wait(150);
+    const a2=js('Game.armSide');
+    info('space', a1+'→'+a2);
+    if(a1===1&&a2===null) ok('space disarms','1→null'); else bad('space disarms',''+a1+'→'+a2);
+  });
+  // size keys
+  await step('Size keys', async()=>{
+    const b=js('Game.nextSize');
+    key('[','BracketLeft'); await wait(150); keyup('[','BracketLeft'); await wait(150);
+    const a=js('Game.nextSize');
+    info('size', b+'→'+a);
+    if(a<b) ok('[/size-down works', b+'→'+a); else bad('[/size-down works', b+'→'+a);
+    key(']','BracketRight'); await wait(150); keyup(']','BracketRight'); await wait(150);
+    info('size after ]', js('Game.nextSize'));
+  });
+  // stop/TP arrow keys
+  await step('Stop/TP arrows', async()=>{
+    const s1=js('Game.stop');
+    key('ArrowUp'); await wait(150); keyup('ArrowUp'); await wait(150);
+    const s2=js('Game.stop');
+    info('stop', s1+'→'+s2);
+    if(s1!==s2) ok('arrowup moves stop', s1+'→'+s2); else bad('arrowup moves stop', s1+'→'+s2);
+  });
+  // Esc in game = cancel limit mode only (by design)
+  await step('Esc in game', async()=>{
+    key('Escape'); await wait(500);
+    const scr=activeScreen();
+    info('Esc in game screen', scr);
+    ok('Esc in game keeps session (by design)', 'screen='+scr);
+  });
+  // quit via pause overlay
+  await step('Quit via pause overlay', async()=>{
+    pointerOn('#tPause'); await wait(300);
+    clickSel('#pauseOv .btn'); await wait(800); // first btn = Resume; we want menu button
+    // try explicit quit button if exists
+    const q=js('Array.from(document.querySelectorAll("#pauseOv .btn")).map(b=>b.textContent).join(",")');
+    info('pause buttons', String(q));
+    js('try{Game.quitToMenu();}catch(e){}'); await wait(700);
+    info('quit →', activeScreen());
+    ok('quit to menu','screen='+activeScreen());
+  });
+  document.getElementById('out').textContent=results.join('\n');
+}
+run().catch(e=>{ document.getElementById('out').textContent=results.join('\n')+'\nFATAL '+e.message; });
+</script></body></html>

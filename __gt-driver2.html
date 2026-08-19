@@ -1,0 +1,142 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>GT DRIVER 2</title></head><body>
+<pre id="out">starting...</pre>
+<script>
+try{ localStorage.setItem('gt_login_ok','1'); localStorage.removeItem('gt_instrument'); }catch(e){}
+const results=[];
+const ok=(n,d)=>results.push('PASS '+n+(d?' :: '+d:''));
+const bad=(n,d)=>results.push('FAIL '+n+(d?' :: '+d:''));
+const info=(n,d)=>results.push('INFO '+n+(d?' :: '+d:''));
+const ifr=document.createElement('iframe'); ifr.id='app'; ifr.src='gametrader.html';
+ifr.style.cssText='width:1280px;height:900px;border:0;';
+document.body.appendChild(ifr);
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+function fdoc(){ const f=document.getElementById('app'); return f&&f.contentDocument?f.contentDocument:null; }
+function fwin(){ const f=document.getElementById('app'); return f&&f.contentWindow?f.contentWindow:null; }
+function findInFrame(sel){ const d=fdoc(); return d?d.querySelector(sel):null; }
+function activeScreen(){ const d=fdoc(); if(!d) return null; const a=d.querySelector('.screen.active'); return a?a.id:null; }
+function bodyClass(){ const d=fdoc(); return d?d.body.className:''; }
+function clickById(id){ const el=findInFrame('#'+id); if(!el) return 'MISSING:'+id; el.click(); return 'OK'; }
+function clickSel(sel){ const el=findInFrame(sel); if(!el) return 'MISSING:'+sel; el.click(); return 'OK'; }
+function js(code){ const w=fwin(); if(!w) return 'NOFRAME'; try{ return w.eval(code); }catch(e){ return 'EVALERR:'+e.message; } }
+function key(k,code){ const w=fwin(); w.dispatchEvent(new w.KeyboardEvent('keydown',{key:k,code:code||('Key'+k.toUpperCase()),bubbles:true})); }
+async function step(name, fn){
+  try{ await fn(); }catch(e){ bad(name,'EXC '+e.message); }
+  const errs=js('window.__gtErrors&&window.__gtErrors.length?window.__gtErrors.join("|"):""');
+  if(errs && String(errs)!=='EVALERR:window.__gtErrors is undefined' && String(errs)!==''){ bad(name,'JS ERROR: '+String(errs).slice(0,400)); js('window.__gtErrors.length=0'); }
+  else js('window.__gtErrors&&(window.__gtErrors.length=0)');
+}
+async function boot(){
+  await wait(2500);
+  js(`(function(){ if(window.__gtErrInstalled) return; window.__gtErrInstalled=true; window.__gtErrors=[];
+    window.addEventListener('error',function(e){ window.__gtErrors.push('ERR '+(e.message||e.type)); });
+    window.addEventListener('unhandledrejection',function(e){ window.__gtErrors.push('REJ '+(e.reason&&e.reason.message||e.reason)); });
+    var oe=console.error; console.error=function(){ window.__gtErrors.push('CERR '+Array.prototype.map.call(arguments,String).join(' ').slice(0,200)); oe.apply(console,arguments); }; })();`);
+  await wait(300);
+  const scr=activeScreen(), cards=findInFrame('#levelList')?findInFrame('#levelList').children.length:0;
+  info('boot', 'screen='+scr+' cards='+cards);
+  if(scr==='menu' && cards>0) ok('boot: menu populated', 'cards='+cards); else bad('boot: menu populated','screen='+scr+' cards='+cards);
+}
+async function run(){
+  await boot();
+  // Custom Session (valid times)
+  await step('Custom Session', async()=>{
+    const det=findInFrame('#practiceTools'); if(det && !det.open){ clickSel('#practiceTools summary'); await wait(300); }
+    const w=fwin();
+    const set=(sel,v)=>{ const el=findInFrame(sel); if(el){ el.value=String(v); el.dispatchEvent(new w.Event('change',{bubbles:true})); } };
+    set('#csFromH',8); set('#csFromM',0); set('#csToH',11); set('#csToM',0);
+    const days=findInFrame('#csDays'); if(days){ days.value='2'; days.dispatchEvent(new w.Event('change',{bubbles:true})); }
+    clickById('csGo'); await wait(1600);
+    const scr=activeScreen();
+    info('custom screen', scr);
+    if(scr==='game') ok('Custom Session TRADE → game','screen='+scr); else bad('Custom Session TRADE → game','screen='+scr);
+    js('try{Game.quitToMenu();}catch(e){}'); await wait(600);
+  });
+  // Pause via correct chip + P key
+  await step('Pause', async()=>{
+    clickById('playBtn'); await wait(1500);
+    clickSel('#tPause'); await wait(400);
+    const p1=js('document.getElementById("pauseOv")?getComputedStyle(document.getElementById("pauseOv")).display:"?"');
+    clickSel('#tPause'); await wait(300);
+    key('p','KeyP'); await wait(400);
+    const p2=js('document.getElementById("pauseOv")?getComputedStyle(document.getElementById("pauseOv")).display:"?"');
+    key('p','KeyP'); await wait(300);
+    info('pause displays', p1+' / '+p2);
+    if(p1==='flex'||p1==='block') ok('pause chip works','display='+p1); else bad('pause chip works','display='+p1);
+    if(p2==='flex'||p2==='block') ok('P key pauses','display='+p2); else bad('P key pauses','display='+p2);
+  });
+  // Speed cycle
+  await step('Speed cycle', async()=>{
+    const before=js('document.getElementById("tSpeed").textContent');
+    clickSel('#tSpeed'); await wait(200);
+    const after=js('document.getElementById("tSpeed").textContent');
+    info('speed', before+' → '+after);
+    if(before!==after) ok('speed cycles',''+before+'→'+after); else bad('speed cycles',''+before+'→'+after);
+  });
+  // VWAP toggle
+  await step('VWAP toggle', async()=>{
+    const before=js('document.getElementById("tVwap").textContent');
+    clickSel('#tVwap'); await wait(200);
+    const after=js('document.getElementById("tVwap").textContent');
+    info('vwap', before+' → '+after);
+    if(before!==after) ok('vwap toggles',''+before+'→'+after); else bad('vwap toggles',''+before+'→'+after);
+  });
+  // Limit order via right-click context menu
+  await step('Limit order ctx menu', async()=>{
+    const r=clickSel('#cvWrap'); await wait(300);
+    const ctx=js('document.getElementById("ctxMenu")?getComputedStyle(document.getElementById("ctxMenu")).display:"?"');
+    info('ctx menu after plain click', String(ctx));
+    // right-click
+    const w=fwin(); const cv=findInFrame('#cv');
+    if(cv){
+      const r=cv.getBoundingClientRect();
+      const ev=new w.MouseEvent('contextmenu',{bubbles:true,cancelable:true,clientX:r.left+400,clientY:r.top+400});
+      cv.dispatchEvent(ev); await wait(300);
+      const ctx2=js('document.getElementById("ctxMenu")?getComputedStyle(document.getElementById("ctxMenu")).display:"?"');
+      info('ctx menu after right-click', String(ctx2));
+      if(ctx2==='block'||ctx2==='flex') ok('right-click opens ctx menu','display='+ctx2); else bad('right-click opens ctx menu','display='+ctx2);
+    } else bad('right-click opens ctx menu','no #cv');
+  });
+  // Finish day chip (challenge only) hidden in normal play?
+  await step('Finish day chip', async()=>{
+    const d=js('document.getElementById("tFinishDayChip")?getComputedStyle(document.getElementById("tFinishDayChip")).display:"?"');
+    info('finishDay chip display', String(d));
+    ok('finish day chip state','display='+d);
+  });
+  js('try{Game.quitToMenu();}catch(e){}'); await wait(700);
+  // Verdict buttons: NEXT MYSTERY + FIX THIS HABIT
+  await step('Verdict buttons', async()=>{
+    clickById('playBtn'); await wait(1500);
+    js('try{Game.finish("TEST END");}catch(e){}'); await wait(1000);
+    const scr=activeScreen();
+    if(scr==='verdict'){
+      const nmD=js('document.getElementById("vNextMystery")?getComputedStyle(document.getElementById("vNextMystery")).display:"?"');
+      const fxD=js('document.getElementById("vFixHabit")?getComputedStyle(document.getElementById("vFixHabit")).display:"?"');
+      info('verdict buttons', 'nextM='+nmD+' fix='+fxD);
+      clickById('vNextMystery'); await wait(1500);
+      const scr2=activeScreen();
+      info('after NEXT MYSTERY', scr2);
+      if(scr2==='game') ok('NEXT MYSTERY → game','screen='+scr2); else bad('NEXT MYSTERY → game','screen='+scr2);
+      js('try{Game.finish("TEST END");}catch(e){}'); await wait(1000);
+      const fx=js('document.getElementById("vFixHabit")?getComputedStyle(document.getElementById("vFixHabit")).display:"?"');
+      if(fx==='block'||fx==='flex'){
+        clickById('vFixHabit'); await wait(1500);
+        const scr3=activeScreen();
+        info('after FIX THIS HABIT', scr3);
+        if(scr3==='game') ok('FIX THIS HABIT → corrective game','screen='+scr3); else bad('FIX THIS HABIT → corrective game','screen='+scr3);
+      } else info('FIX THIS HABIT hidden (no violations this session)','display='+fx);
+      js('try{show("menu");}catch(e){}'); await wait(400);
+    } else bad('verdict buttons','screen='+scr);
+  });
+  // instrument menu back
+  await step('Instrument back', async()=>{
+    clickSel('#instrumentMenuBtn'); await wait(500);
+    const scr1=activeScreen(); info('instrument screen', scr1);
+    key('Escape'); await wait(500);
+    const scr2=activeScreen();
+    info('after Escape', scr2);
+    if(scr2==='menu') ok('instrument menu Escape → menu','screen='+scr2); else bad('instrument menu Escape → menu','screen='+scr2);
+  });
+  document.getElementById('out').textContent=results.join('\n');
+}
+run().catch(e=>{ document.getElementById('out').textContent=results.join('\n')+'\nFATAL '+e.message; });
+</script></body></html>

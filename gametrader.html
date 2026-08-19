@@ -849,7 +849,7 @@ body.mobile #helpBtn{right:62px !important}
 
 <div id="instrumentMenu" class="screen">
   <div class="logo"><span class="g">GAME</span><span class="t">TRADER</span></div>
-    <div class="tagline">Choose an index · arcade replay trainer · <b style="color:var(--brass)">v0.35.75</b></div>
+    <div class="tagline">Choose an index · arcade replay trainer · <b style="color:var(--brass)">v0.35.76</b></div>
   <div class="levels" style="margin-top:18px">
     <button class="lvl" style="cursor:pointer;text-align:center" onclick="selectInstrument('de40')">
       <div class="day" style="text-align:center">INDEX</div>
@@ -874,7 +874,7 @@ body.mobile #helpBtn{right:62px !important}
     <button onclick="show('instrumentMenu')" style="background:none;border:none;color:var(--faint);font-size:12px;cursor:pointer;padding:6px">&lsaquo; Change index</button>
   </div>
   <div class="logo"><span class="g">GAME</span><span class="t">TRADER</span></div>
-    <div class="tagline"><span id="curLabel">DE40</span> · arcade replay trainer · <span id="modeLabel" style="color:var(--cyan)">Sim Arcade</span> · <b id="buildVer" style="color:var(--brass)">v0.35.75</b></div>
+    <div class="tagline"><span id="curLabel">DE40</span> · arcade replay trainer · <span id="modeLabel" style="color:var(--cyan)">Sim Arcade</span> · <b id="buildVer" style="color:var(--brass)">v0.35.76</b></div>
   <div id="challengeBanner" style="display:none"></div>
   <div class="menurow homeDest" style="margin-top:0">
     <button class="btn primary play" id="playBtn" type="button">▶ PLAY<span>unknown day · mystery</span></button>
@@ -937,7 +937,7 @@ body.mobile #helpBtn{right:62px !important}
       <button onclick="show('menu')" style="background:none;border:none;color:var(--faint);font-size:12px;cursor:pointer;padding:6px">&lsaquo; Back to levels</button>
     </div>
     <div class="logo"><span class="g">GAME</span><span class="t">TRADER</span></div>
-    <div class="tagline"><span id="chCurLabel">DE40</span> · challenge hub · <span id="chModeLabel" style="color:var(--cyan)">Prop Challenge</span> · <b id="chBuildVer" style="color:var(--brass)">v0.35.75</b></div>
+    <div class="tagline"><span id="chCurLabel">DE40</span> · challenge hub · <span id="chModeLabel" style="color:var(--cyan)">Prop Challenge</span> · <b id="chBuildVer" style="color:var(--brass)">v0.35.76</b></div>
   </div>
   <div class="hubGrid">
     <div class="hubCard" id="chRunCard">
@@ -1131,7 +1131,7 @@ body.mobile #helpBtn{right:62px !important}
           </span>
           <div class="radioLabel"><b>RADIO</b><span id="radioTrackTitle">No tracks loaded</span></div>
         </span>
-        <span style="justify-self:end;text-align:right"><span id="mModeTag" style="color:var(--cyan);margin-right:8px">Sim Arcade</span><span id="mClock">--:--</span> <span style="color:var(--faint);font-size:10px">v0.35.75</span></span>
+        <span style="justify-self:end;text-align:right"><span id="mModeTag" style="color:var(--cyan);margin-right:8px">Sim Arcade</span><span id="mClock">--:--</span> <span style="color:var(--faint);font-size:10px">v0.35.76</span></span>
       </div>
     <div id="indicatorMenuBar">
       <details id="indicatorControl" class="indicatorControl">
@@ -1342,7 +1342,7 @@ body.mobile #helpBtn{right:62px !important}
     <span><b>[ ]/LB RB</b> order size ±</span><span><b>↓↑/LT RT</b> stop ±5</span>
     <span><b>1-7/Y</b> speed</span><span><b>F/D-pad L/R</b> timeframe</span><span><b>N/Hold Start</b> finish day</span><span><b>P/Start</b> pause</span><span><b>R/Back</b> restart</span>
     <span><b>E / right-click</b> limit order</span><span>grab the TP/SL line or label and drag — live price updates while replay freezes</span>
-    <span style="margin-left:auto;color:var(--faint)">v0.35.75</span><span id="padMini">🎮 —</span>
+    <span style="margin-left:auto;color:var(--faint)">v0.35.76</span><span id="padMini">🎮 —</span>
   </div>
 </div>
 
@@ -4327,7 +4327,7 @@ const ChallengeManager={
     const hint=document.getElementById('chHint');
     const cur=document.getElementById('chCurLabel'); if(cur) cur.textContent=CUR.label;
     const mode=document.getElementById('chModeLabel'); if(mode) mode.textContent=GAME_MODES.prop_challenge.label;
-  const build=document.getElementById('chBuildVer'); if(build) build.textContent='v0.35.75';
+  const build=document.getElementById('chBuildVer'); if(build) build.textContent='v0.35.76';
     if(!meta || !chips || !list || !hint) return;
     const s=this.state;
     if(!s){
@@ -6006,9 +6006,9 @@ const Game = {
     if(!this.pos) return 1;
     return Math.max(this.pos.stepPts||1, this.price*0.00012); // safe placement gap from live price
   },
-  flagStopWidening(newStop){
+  flagStopWidening(newStop, prevStop){
     const p=this.pos; if(!p||!p.avg) return;
-    const oldRisk=Math.abs(p.avg-(p.stop==null?p.avg:p.stop));
+    const oldRisk=Math.abs(p.avg-(prevStop==null?p.avg:prevStop));
     const newRisk=Math.abs(p.avg-newStop);
     const wasWidened=(p.violations&&p.violations.includes('stop_widening'));
     // widening = risk moved further from entry than it already was (beyond small noise)
@@ -6029,7 +6029,7 @@ const Game = {
     else ns=Math.max(ns,this.price+gap);
     const prevStop=this.pos.stop;
     this.pos.stop=+ns.toFixed(CFG.decimals);
-    if(prevStop!=null) this.flagStopWidening(this.pos.stop);
+    if(prevStop!=null) this.flagStopWidening(this.pos.stop, prevStop);
   },
   moveTPTo(price){
     if(!this.pos||this.over) return;              // tp==null now allowed: this CREATES it
@@ -6445,7 +6445,7 @@ const Game = {
     else ns=Math.max(ns,this.price+gap);
     const prevStop=this.pos.stop;
     this.pos.stop=+ns.toFixed(CFG.decimals);
-    if(prevStop!=null) this.flagStopWidening(this.pos.stop);
+    if(prevStop!=null) this.flagStopWidening(this.pos.stop, prevStop);
     Snd.tickUp();
   },
   closeAll(fill,reason){
